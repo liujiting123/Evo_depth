@@ -120,7 +120,7 @@ def init_wandb(config: dict, accelerator: Accelerator):
             os.environ["WANDB_MODE"] = "disabled"
 
         wandb.init(
-            project=get_with_warning(config, "wandb_project", "default_run"),
+            project=get_with_warning(config, "wandb_project", "Evo_da3_film_true_masked"),
             name=get_with_warning(config, "run_name", "default_run"),
             config=config,
             dir=get_with_warning(config, "save_dir", "checkpoints"),
@@ -134,7 +134,7 @@ def init_swanlab(config: dict, accelerator: Accelerator):
 
     if accelerator is None or accelerator.is_main_process:
         swanlab.init(
-            project=config.get("wandb_project", "default_run"),
+            project=config.get("wandb_project", "Evo_da3_Metaworld"),
             name=config.get("run_name", "default_run"),
             config=config
         )
@@ -422,6 +422,8 @@ def train(config):
         inspect_named_submodules({
             "vision_model": model.embedder.model.vision_model,
             "language_model": model.embedder.model.language_model,
+            "da3_embedder" : model.embedder.dpt_embedder,
+            "film_fuser" : model.embedder.dpt_linear_film ,
             "action_head": model.action_head
         })
 
