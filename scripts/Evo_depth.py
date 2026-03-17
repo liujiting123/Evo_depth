@@ -9,7 +9,7 @@ import torch.nn as nn
 from model.internvl3.internvl3_embedder_da3 import InternVL3Embedder
 from model.action_head.flow_matching import FlowmatchingActionHead
 import logging
-class EVO1(nn.Module):
+class Evo_depth(nn.Module):
     def __init__(self, config: dict):
         super().__init__() 
         self.config = config

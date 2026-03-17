@@ -112,7 +112,7 @@ class InternVL3Embedder(nn.Module):
             if isinstance(image, torch.Tensor):
                 image = to_pil_image(image)
             tiles = dynamic_preprocess(image, image_size=self.image_size)
-            tile_tensors = torch.stack([self.transform(t) for t in tiles])  # (T_i, 3, 448, 448)
+            tile_tensors = torch.stack([self.transform(t) for t in tiles])
             pixel_values_list.append(tile_tensors)
 
         pixel_values = torch.cat(pixel_values_list, dim=0).to(dtype=torch.bfloat16, device=self.device)
@@ -186,8 +186,7 @@ class InternVL3Embedder(nn.Module):
             ignore_flag = False
         except Exception as e:
             vit_embeds = vit_embeds.reshape(-1, C)
-            print(f'warning: {e}, input_embeds[selected].shape={input_embeds[selected].shape}, '
-                  f'vit_embeds.shape={vit_embeds.shape}')
+            logging.warning("Embedding shape mismatch during fusion: %s", e)
             n_token = selected.sum()
             input_embeds[selected] = input_embeds[selected] * 0.0 + vit_embeds[:n_token]
             ignore_flag = True

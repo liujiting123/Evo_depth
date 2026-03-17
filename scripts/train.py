@@ -11,7 +11,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from torch.optim.lr_scheduler import LambdaLR
-from Evo1 import EVO1
+from scripts.Evo_depth import Evo_depth
 from accelerate import Accelerator 
 import logging
 from datetime import datetime
@@ -347,7 +347,7 @@ def train(config):
     dataloader = prepare_dataloader(dataset, config)
 
     # === Model ===
-    model = EVO1(config)
+    model = Evo_depth(config)
     model.train()
     model.set_finetune_flags()
 

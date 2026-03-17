@@ -12,8 +12,7 @@ from torchvision.transforms.functional import to_pil_image
 from typing import Union, List
 from torch import nn
 import logging
-from safetensors.torch import load_file
-from model.depth_anything_v3 import DAV3Module
+from model.depth_anything_3.depth_anything_v3 import DAV3Module
 from torch.utils.checkpoint import checkpoint
 
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
@@ -110,12 +109,6 @@ class InternVL3Embedder(nn.Module):
             
             self.dpt_embedder = DAV3Module()
             
-            # state_dict = load_file("/home/dell/code/ljt/Evo_da3/model.safetensors")
-            # #print(state_dict.keys())
-            # #new_state_dict = {k[len("model."):]: v for k, v in state_dict.items() if k.startswith("model.")}
-            # self.dpt_embedder.load_state_dict(state_dict)
-            
-            # self.dpt_embedder.load_state_dict(torch.load("/home/dell/code/znb/Evo_depth/checkpoints/model.safetensors")["model"])
             self.dpt_embedder.to(self.device)
 
             class DPTLinearFilM(nn.Module):
@@ -127,16 +120,13 @@ class InternVL3Embedder(nn.Module):
                     self.proj_c = nn.Sequential( 
                         nn.Linear(896, 896*2),
                     )
-                    self.pool = nn.AdaptiveAvgPool1d(output_size=1)
                 def forward(self, x):
-                    # 使用 autocast 自动管理精度
                     with torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16):
                         x = self.norm(self.relu(self.proj(x)))
-                        x = x.reshape(1, -1, x.shape[-1])  # [1, 4107, 896]
-                        
-                        x = x.mean(dim=1,keepdim=True)  # [1, 1,896]
-                        x = self.proj_c(x)  # [1, 1,896*2]
-                        return x.chunk(2, dim=-1)  # 返回两个张量，每个张量的形状为 [1, 1, 896]
+                        x = x.reshape(1, -1, x.shape[-1])
+                        x = x.mean(dim=1, keepdim=True)
+                        x = self.proj_c(x)
+                        return x.chunk(2, dim=-1)
             self.dpt_linear_film = DPTLinearFilM().to(self.device)
     
     
@@ -227,8 +217,7 @@ class InternVL3Embedder(nn.Module):
             ignore_flag = False
         except Exception as e:
             vit_embeds = vit_embeds.reshape(-1, C)
-            print(f'warning: {e}, input_embeds[selected].shape={input_embeds[selected].shape}, '
-                  f'vit_embeds.shape={vit_embeds.shape}')
+            logging.warning("Embedding shape mismatch during fusion: %s", e)
             n_token = selected.sum()
             input_embeds[selected] = input_embeds[selected] * 0.0 + vit_embeds[:n_token]
             ignore_flag = True

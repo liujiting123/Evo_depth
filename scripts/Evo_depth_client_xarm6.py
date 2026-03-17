@@ -130,7 +130,7 @@ async def inference_thread():
                 await asyncio.sleep(0.5)
                 continue
 
-            print(f"[Step {step}] gets the action: {action_chunk.shape}")
+            print(f"[Step {step}] action received")
 
             for i, act in enumerate(action_chunk[:25]):
                 joint = act[:6].tolist()

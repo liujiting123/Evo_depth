@@ -1,4 +1,4 @@
-# evo1_server_json.py
+# evo_depth_server.py
 
 import sys
 import os
@@ -15,7 +15,7 @@ from fvcore.nn import FlopCountAnalysis
 
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from scripts.Evo1 import EVO1
+from scripts.Evo_depth import Evo_depth
 
 
 
@@ -68,7 +68,7 @@ def load_model_and_normalizer(ckpt_dir):
     config["finetune_action_head"] = False
     config["num_inference_timesteps"] = 32
 
-    model = EVO1(config).eval()
+    model = Evo_depth(config).eval()
     ckpt_path = os.path.join(ckpt_dir, "mp_rank_00_model_states.pt")
 
     checkpoint = torch.load(ckpt_path, map_location="cpu")
@@ -112,9 +112,6 @@ def infer_from_json_dict(data: dict, model, normalizer):
     image_mask = torch.tensor(data["image_mask"], dtype=torch.int32, device=device)
     action_mask = torch.tensor([data["action_mask"]],dtype=torch.int32, device=device)
 
-    print(f"image_mask,{image_mask}")
-    print(f"action_mask,{action_mask}")
-    
     with torch.no_grad() and torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16):
         action = model.run_inference(
             images=images,
@@ -144,18 +141,18 @@ async def handle_request(websocket, model, normalizer):
         print("Client disconnected.")
  
 
-# === 启动服务 ===
+# === Start server ===
 if __name__ == "__main__":
     ckpt_dir = "Your/Path/To/Checkpoint"
-    #Example: ckpt_dir = "/home/dell/checkpoints/Evo1/Evo1_MetaWorld/"
+    #Example: ckpt_dir = "/home/dell/checkpoints/Evo_depth/Evo_depth_MetaWorld/"
 
     port = 9000
 
-    print("Loading EVO_1 model...")
+    print("Loading Evo_depth model...")
     model, normalizer = load_model_and_normalizer(ckpt_dir)
 
     async def main():
-        print(f"EVO_1 server running at ws://0.0.0.0:{port}")
+        print(f"Evo_depth server running at ws://0.0.0.0:{port}")
         async with websockets.serve(
             lambda ws: handle_request(ws, model, normalizer),
             "0.0.0.0", port, max_size=100_000_000
