@@ -9,8 +9,11 @@ import os
 class DAV3Module(nn.Module):
     def __init__(self, config=None):
         super(DAV3Module, self).__init__()
-        
-        self.model = DepthAnything3.from_pretrained("/home/bozhao/code/ljt/Evo_da3_film_true_else/checkpoints/", local_files_only=True)
+        checkpoint_dir = os.environ.get(
+            "EVO1_DA3_CHECKPOINT_DIR",
+            "/home/bozhao/code/ljt/Evo_da3_film_true_else/checkpoints/",
+        )
+        self.model = DepthAnything3.from_pretrained(checkpoint_dir, local_files_only=True)
         
         
 
