@@ -237,21 +237,23 @@ cd VLA-Arena-evaluation
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 conda create -n vla_arena python=3.11
+conda activate vla_arena
 pip install .
 pip install websockets==15.0.1 draccus
-cd ..
 ```
 
 ### 2. Run VLA-Arena Evaluation
 #### 2.1 Start EvoDepth server
 This is the same server used for LIBERO:
 ``` bash
+conda activate evo_depth
 cd Evo_depth
 python scripts/Evo1_server.py
 ```
 #### 2.2 Run VLA-Arena client
 In the other terminal, you can run the evaluation scripts.
 ``` bash
+conda activate vla_arena
 cd VLA-Arena-evaluation
 python vla_arena/vla_arena_client.py  \
 --execution_horizon 10     \
