@@ -230,6 +230,42 @@ python metaworld_client.py --config metaworld_eval.yaml --server_url ws://127.0.
 
 Each run creates `<log_dir>/<run_name>/eval.txt` and `<log_dir>/<run_name>/videos/` (default `run_name` is a timestamp).
 
+## VLA-Arena Benchmark
+### 1. Prepare the environment for VLA-Arena
+``` bash
+cd VLA_Arena_Evaluation
+git clone https://github.com/PKU-Alignment/VLA-Arena.git
+cd VLA-Arena
+conda create -n vla_arena python=3.11
+pip install .
+pip install websockets==15.0.1 draccus
+cd ..
+```
+
+### 2. Run VLA-Arena Evaluation
+#### 2.1 Start EvoDepth server
+This is the same server used for LIBERO:
+``` bash
+cd Evo_depth
+python scripts/Evo1_server.py
+```
+#### 2.2 Run VLA-Arena client
+In the other terminal, you can run the evaluation scripts.
+``` bash
+cd VLA-Arena-evaluation
+python vla_arena/vla_arena_client.py  \
+--execution_horizon 10     \
+--seed 10    \
+--num_episodes_per_task 10  \  
+--server_url ws://127.0.0.1:9000  \  
+--log_out_dir ./logs/exp_h10_s27  
+--save_video_mode all \
+--max_episode_steps 300 
+# or you can use the test_vla_arena.sh
+```
+
+
+
 ## Training on your own dataset
 
 Training follows the same **LeRobot v2.1-style** : each dataset root should contain `meta/` (e.g. `tasks.jsonl`, `episodes.jsonl`, stats) and `data/` / `videos/` as consumed by `lerobot_dataset_pretrain_mp.py`. This repo uses a **three-stage** schedule (see `[train.sh](Evo_depth/train.sh)`): (1) action head only, (2) DA3 + action head, (3) VLM + DA3 + action head full fine-tuning.
