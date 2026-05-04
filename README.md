@@ -233,7 +233,7 @@ Each run creates `<log_dir>/<run_name>/eval.txt` and `<log_dir>/<run_name>/video
 ## VLA-Arena Benchmark
 ### 1. Prepare the environment for VLA-Arena
 ``` bash
-cd VLA_Arena_Evaluation
+cd VLA-Arena-evaluation
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 conda create -n vla_arena python=3.11
