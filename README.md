@@ -1,7 +1,20 @@
+# EvoDepth
+
+EvoDepth is a vision-language-action policy for robotic manipulation that augments an InternVL3-based visual-language backbone with Depth Anything 3 (DA3) depth features and a flow-matching action head. The policy takes multi-view RGB observations, robot state, and a language instruction, then predicts a chunk of continuous robot actions.
+
+This repository provides:
+
+- A websocket inference server shared by all simulation clients.
+- Evaluation clients and scripts for LIBERO, LIBERO-PLUS, MetaWorld MT50, and VLA-Arena.
+- LeRobot-format dataset loading for custom training data.
+- A three-stage fine-tuning recipe in `Evo_depth/train.sh`: action head only, DA3 + action head, then full VLM + DA3 + action head fine-tuning.
+
+The default server port is `9000`. Set `EVO_DEPTH_SERVER_PORT` and pass the matching `server_url` to each client if you need a different port.
+
 # Installation
 
 ```bash
-git clone <anonymous-repo-url>
+git clone https://github.com/liujiting123/Evo_depth.git
 
 cd Evo_depth
 conda create -n evo_depth python=3.10 -y
@@ -9,8 +22,7 @@ conda activate evo_depth
 pip install -r requirements.txt
 MAX_JOBS=64 pip install -v flash-attn --no-build-isolation
 pip install --no-build-isolation git+https://github.com/nerfstudio-project/gsplat.git@0b4dddf04cb687367602c01196913cde6a743d70 # for gaussian head
-pip install -e ".[app]" # Gradio, python>=3.10
-pip install -e ".[all]" # ALL
+
 
 ```
 
@@ -192,19 +204,19 @@ On headless machines, `MUJOCO_GL=egl` is set from `metaworld_eval.yaml` (see `mu
 | File                                       | Role                                                                        |
 | ------------------------------------------ | --------------------------------------------------------------------------- |
 | `Metaworld-evaluation/metaworld_eval.yaml` | Server URL, logging, MT50 camera, horizons, video/debug flags               |
-| `Metaworld-evaluation/mt50_order.json`     | Task order and difficulty groups (`easy` / `medium` / …)                    |
+| `Metaworld-evaluation/mt50_order.json`     | Task order and difficulty groups (`easy` / `medium` / `hard`)                |
 | `Metaworld-evaluation/tasks.jsonl`         | Language prompts; lines may use `task_index` or `idx` to match MT50 indices |
 
 
-Relative paths in the YAML are resolved against the YAML file’s directory.
+Relative paths in the YAML are resolved against the YAML file's directory.
 
 ### 3. Model / server (same as LIBERO)
 
-Use the same `EVO_DEPTH_CKPT_DIR` / `EVO_DEPTH_SERVER_PORT` as in **LIBERO → Server checkpoint and port** above. In `Metaworld-evaluation/metaworld_eval.yaml`, set `server_url` to match the server (default `ws://127.0.0.1:9000`).
+Use the same `EVO_DEPTH_CKPT_DIR` / `EVO_DEPTH_SERVER_PORT` as in **LIBERO - Server checkpoint and port** above. In `Metaworld-evaluation/metaworld_eval.yaml`, set `server_url` to match the server (default `ws://127.0.0.1:9000`).
 
 ### 4. Run evaluation
 
-Terminal 1 — EvoDepth server:
+Terminal 1 - EvoDepth server:
 
 ```bash
 conda activate evo_depth
@@ -212,7 +224,7 @@ cd Evo_depth
 python scripts/Evo_depth_server.py
 ```
 
-Terminal 2 — MT50 client (from repo root):
+Terminal 2 - MT50 client (from repo root):
 
 ```bash
 cd Metaworld-evaluation
@@ -248,7 +260,7 @@ This is the same server used for LIBERO:
 ``` bash
 conda activate evo_depth
 cd Evo_depth
-python scripts/Evo1_server.py
+python scripts/Evo_depth_server.py
 ```
 #### 2.2 Run VLA-Arena client
 In the other terminal, you can run the evaluation scripts.
@@ -291,20 +303,20 @@ Use any HF or local path; replace `<ORG>/<YOUR_DATASET>` with your dataset id.
 
 #### 2.1 `dataset/config.yaml`
 
-Edit `[Evo_depth/dataset/config.yaml](Evo_depth/dataset/config.yaml)`: under `data_groups`, set each dataset `path` and `view_map` (camera folder names under `videos/<chunk>/`). Keep `max_action_dim`, `max_state_dim`, and `max_views` consistent with your training script (`--per_action_dim`, `--state_dim`, and the model’s expected number of views).
+Edit `[Evo_depth/dataset/config.yaml](Evo_depth/dataset/config.yaml)`: under `data_groups`, set each dataset `path` and `view_map` (camera folder names under `videos/<chunk>/`). Keep `max_action_dim`, `max_state_dim`, and `max_views` consistent with your training script (`--per_action_dim`, `--state_dim`, and the model's expected number of views).
 
 #### 2.2 Parquet cache directory
 
 Preprocessed windows are cached as `.pkl` files.
 
-- **Default directory** (when `LeRobotDataset(..., cache_dir=None)`): set in `[Evo_depth/dataset/lerobot_dataset_pretrain_mp.py](Evo_depth/dataset/lerobot_dataset_pretrain_mp.py)` **lines 173–176** — if `cache_dir` is `None`, `self.cache_dir` becomes `Path("./cache/lerobot_pretrain")` (relative to the process working directory, usually the inner `Evo_depth/` package).
-- **To override without editing that file**: pass `cache_dir=...` into `LeRobotDataset` inside `[prepare_dataset](Evo_depth/scripts/train.py)` (**lines 155–162**); the constructor call currently omits `cache_dir`, so the default in `lerobot_dataset_pretrain_mp.py` applies.
+- **Default directory** (when `LeRobotDataset(..., cache_dir=None)`): set in `[Evo_depth/dataset/lerobot_dataset_pretrain_mp.py](Evo_depth/dataset/lerobot_dataset_pretrain_mp.py)` **lines 173-176** - if `cache_dir` is `None`, `self.cache_dir` becomes `Path("./cache/lerobot_pretrain")` (relative to the process working directory, usually the inner `Evo_depth/` package).
+- **To override without editing that file**: pass `cache_dir=...` into `LeRobotDataset` inside `[prepare_dataset](Evo_depth/scripts/train.py)` (**lines 155-162**); the constructor call currently omits `cache_dir`, so the default in `lerobot_dataset_pretrain_mp.py` applies.
 
 ### 3. Start training
 
 #### 3.1 Accelerate and DeepSpeed
 
-From the inner package directory `Evo_depth/` (where `ds_config.json` and `scripts/train.py` live):
+From the inner package directory `Evo_depth/` (where `train.sh`, `ds_config.json`, and `scripts/train.py` live):
 
 ```bash
 conda activate evo_depth
@@ -312,131 +324,25 @@ cd Evo_depth
 accelerate config   # once per machine; multi-GPU: set num_processes accordingly
 ```
 
-Use `[ds_config.json](Evo_depth/ds_config.json)` with `accelerate launch` as in `train.sh`.
+`train.sh` contains the full three-stage training recipe:
 
-#### 3.2 Stage 1 — action head only
+1. Stage 1: train the action head only (`--finetune_action_head`).
+2. Stage 2: train DA3 + action head (`--finetune_da3 --finetune_action_head`) and resume from stage 1.
+3. Stage 3: full fine-tuning of VLM + DA3 + action head (`--finetune_vlm --finetune_da3 --finetune_action_head`) and resume from stage 2.
 
-Train `**--finetune_action_head**` only. With `**--use_da3**`, the Depth Anything 3 branch is in the forward path but stays **frozen** until you add `**--finetune_da3`** in stage 2. VLM stays frozen without `**--finetune_vlm**`.
+Before running, edit `[Evo_depth/train.sh](Evo_depth/train.sh)` and update:
+
+- `--dataset_config_path` if you use a config file other than `dataset/config.yaml`.
+- `--save_dir` for each stage.
+- `--resume_path` for stages 2 and 3, making sure the `step_*` folder matches the checkpoint produced by the previous stage.
+- `--max_steps`, `--batch_size`, and `--num_processes` according to your GPU setup.
+
+Then launch training from the inner package directory:
 
 ```bash
+conda activate evo_depth
 cd Evo_depth
-
-accelerate launch \
-  --num_processes 1 \
-  --num_machines 1 \
-  --deepspeed_config_file ds_config.json \
-  --main_process_port 29519 \
-  scripts/train.py \
-  --run_name Evo_depth_3stages_stage1 \
-  --action_head flowmatching \
-  --use_augmentation \
-  --lr 1e-5 \
-  --dropout 0.2 \
-  --weight_decay 1e-3 \
-  --batch_size 16 \
-  --image_size 448 \
-  --max_steps 5000 \
-  --log_interval 10 \
-  --ckpt_interval 2500 \
-  --warmup_steps 1000 \
-  --grad_clip_norm 1.0 \
-  --num_layers 8 \
-  --horizon 50 \
-  --finetune_action_head \
-  --disable_wandb \
-  --vlm_name OpenGVLab/InternVL3-1B \
-  --dataset_config_path dataset/config.yaml \
-  --per_action_dim 24 \
-  --state_dim 24 \
-  --use_da3 \
-  --save_dir /path/to/checkpoints/stage1/
+bash train.sh
 ```
 
-For multi-GPU, set `--num_processes` to match `accelerate config`.
-
-#### 3.3 Stage 2 — DA3 + action head
-
-Add `**--finetune_da3**` (keep `**--finetune_action_head**`). Resume from the last step of stage 1 (`--resume --resume_pretrain --resume_path .../step_<N>`; `N` must match the checkpoint tag on disk).
-
-```bash
-accelerate launch \
-  --num_processes 1 \
-  --num_machines 1 \
-  --deepspeed_config_file ds_config.json \
-  --main_process_port 29519 \
-  scripts/train.py \
-  --run_name Evo_depth_3stages_stage2 \
-  --action_head flowmatching \
-  --use_augmentation \
-  --lr 1e-5 \
-  --dropout 0.2 \
-  --weight_decay 1e-3 \
-  --batch_size 16 \
-  --image_size 448 \
-  --max_steps 10000 \
-  --log_interval 10 \
-  --ckpt_interval 2500 \
-  --warmup_steps 1000 \
-  --grad_clip_norm 1.0 \
-  --num_layers 8 \
-  --horizon 50 \
-  --finetune_action_head \
-  --finetune_da3 \
-  --disable_wandb \
-  --vlm_name OpenGVLab/InternVL3-1B \
-  --dataset_config_path dataset/config.yaml \
-  --per_action_dim 24 \
-  --state_dim 24 \
-  --use_da3 \
-  --save_dir /path/to/checkpoints/stage2/ \
-  --resume \
-  --resume_pretrain \
-  --resume_path /path/to/checkpoints/stage1/step_5000
-```
-
-#### 3.4 Stage 3 — full model (VLM + DA3 + action head)
-
-Add `**--finetune_vlm**` together with `**--finetune_da3**` and `**--finetune_action_head**`. Resume from stage 2’s final step (again align `--resume_path` with the real `step_*` folder).
-
-```bash
-accelerate launch \
-  --num_processes 1 \
-  --num_machines 1 \
-  --deepspeed_config_file ds_config.json \
-  --main_process_port 29519 \
-  scripts/train.py \
-  --run_name Evo_depth_3stages_stage3 \
-  --action_head flowmatching \
-  --use_augmentation \
-  --lr 1e-5 \
-  --dropout 0.2 \
-  --weight_decay 1e-3 \
-  --batch_size 16 \
-  --image_size 448 \
-  --max_steps 80000 \
-  --log_interval 10 \
-  --ckpt_interval 2500 \
-  --warmup_steps 1000 \
-  --grad_clip_norm 1.0 \
-  --num_layers 8 \
-  --horizon 50 \
-  --use_da3 \
-  --finetune_vlm \
-  --finetune_action_head \
-  --finetune_da3 \
-  --disable_wandb \
-  --vlm_name OpenGVLab/InternVL3-1B \
-  --dataset_config_path dataset/config.yaml \
-  --per_action_dim 24 \
-  --state_dim 24 \
-  --save_dir /path/to/checkpoints/stage3/ \
-  --resume \
-  --resume_pretrain \
-  --resume_path /path/to/checkpoints/stage2/step_10000
-```
-
-#### 3.5 (Optional) Resume mid-stage
-
-Keep the same finetune flags as the stage you are in; set `**--resume**` and `**--resume_path**` to the checkpoint directory (e.g. `.../step_20000`). See `scripts/train.py` for all flags.
-
-The canonical copy-paste layout is in `[train.sh](Evo_depth/train.sh)`; edit paths, `max_steps`, and `step_*` to match your machine.
+For multi-GPU training, set `--num_processes` in `train.sh` to match your `accelerate config`. To resume in the middle of a stage, keep the same finetune flags as that stage and set `--resume --resume_path` to the target checkpoint directory, for example `.../step_20000`.

@@ -20,7 +20,7 @@ data_groups:
   # MetaWorld (LeRobot layout): under `path` expect meta/tasks.jsonl, meta/episodes.jsonl,
   # meta/episodes_stats.jsonl or meta/stats.json, data/*/*.parquet, and videos/<chunk>/<view>/episode_*.mp4.
   # view_map values are folder names under videos/<chunk>/ (see lerobot_dataset_pretrain_mp.py).
-  # Single fixed camera (e.g. MT50 corner): map only image_1 — the dataloader pads to max_views=3
+  # Single fixed camera (e.g. MT50 corner): map only image_1; the dataloader pads to max_views=3
   # with zeros and matches EvoDepth inference with image_mask [1,0,0].
   metaworld_sawyer:
     Evo_depth_MetaWorld:
