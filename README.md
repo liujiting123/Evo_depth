@@ -89,44 +89,15 @@ python scripts/Evo_depth_server.py
 ```bash
 cd LIBERO-evaluation
 
-# Usage: ./test_libero.sh [log_path] [task] [server_url]
+# Usage: bash ./test_libero.sh [log_path] [task] [server_url]
 # example:
-./test_libero.sh ./logs libero_spatial ws://127.0.0.1:9000
+bash ./test_libero.sh ./logs libero_spatial ws://127.0.0.1:9000
 ```
 
 ## LIBERO PLUS Benchmark
 
 ### 1. Prepare the environment for LIBERO-PLUS
-
-```bash
-# Clone our repository
-git clone https://github.com/LinqingZhong/LIBERO-plus.git
-cd LIBERO-plus
-
-# Install the new LIBERO package
-pip install -e .
-
-# New dependencies installed on top of LIBERO
-sudo apt install libexpat1
-sudo apt install libfontconfig1-dev
-sudo apt install libpython3-stdlib
-sudo apt-get install libmagickwand-dev
-apt install -y cmake build-essential
-sudo apt install -y libgl1-mesa-dev libglib2.0-0
-
-
-pip install websockets
-pip install PyYAML
-pip install torch==2.5.1
-
-pip install -r requirements.txt
-pip install numpy==1.26.4
-pip install -r extra_requirements.txt
-
-
-sudo apt update
-sudo apt install -y libgl1-mesa-dev libglib2.0-0
-```
+Please follow the official github to prepare their environment:https://github.com/LinqingZhong/LIBERO-plus
 
 ### 2. Run LIBERO-PLUS Evaluation
 
@@ -151,13 +122,13 @@ In another terminal:
 cd LIBERO-PLUS-evaluation
 
 # Usage:
-# ./test_libero_plus.sh <log_path> [task]
+# bash ./test_libero_plus.sh <log_path> [task]
 #   log_path: directory to save log.txt and videos
 #   task    : libero_spatial | libero_goal | libero_object | libero_10
 #             (default: libero_spatial)
 
 # Example:
-./test_libero_plus.sh /path/to/logs libero_goal
+bash ./test_libero_plus.sh /path/to/logs libero_goal
 ```
 
 This script calls:
@@ -230,10 +201,10 @@ Terminal 2 - MT50 client (from repo root):
 cd Metaworld-evaluation
 
 # Defaults: read metaworld_eval.yaml (edit server_url / log_dir there), then:
-./test_metaworld.sh
+bash ./test_metaworld.sh
 
 # Or pass log base directory and websocket URL:
-./test_metaworld.sh ./metaworld_logs ws://127.0.0.1:9000
+bash ./test_metaworld.sh ./metaworld_logs ws://127.0.0.1:9000
 
 # CLI overrides (see metaworld_client.py --help):
 python metaworld_client.py --config metaworld_eval.yaml --server_url ws://127.0.0.1:9000 \
